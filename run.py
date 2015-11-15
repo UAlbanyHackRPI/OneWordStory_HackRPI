@@ -108,6 +108,14 @@ def start():
                                      body=msg)
         message = client.messages.create(to=nums[1], from_="+15183124106",
                                      body=msg)
+                                     
+        query = "select story from gsessions where matchid = ?"
+        cursor.execute(query, (matchid,))
+        msg = "".join(["Your story: ", cursor.fetchall()[0][0]])
+        message = client.messages.create(to=nums[0], from_="+15183124106",
+                                     body=msg)
+        message = client.messages.create(to=nums[1], from_="+15183124106",
+                                     body=msg)
         conn.commit()
     
     else:
