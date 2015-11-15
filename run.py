@@ -63,6 +63,50 @@ def start():
         else:
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
 
+    else:
+        """assumed to be a word entry for the story"""
+        
+        msg = msg.split()[0]
+        query = "select accounts.name, gsessions.matchid, gsessions.turn from accounts,gsessions where accounts.name = gsessions.name1"
+        cursor.execute(query)
+        for row in cursor.fetchall():
+            name, matchid, turn = row
+        cursor.execute("select name from accounts where number = ?", (from_number,))
+        if (turn % 2 == 0) and (name == cursor.fetchall()[0][0]):
+            query = "select story from gsessions where matchid = ?"
+            cursor.execute(query, (matchid,))
+            story = cursor.fetchall()[0][0]
+            story += msg
+            story += " "
+            query = "update gsessions set story = ?, turn = (turn+1) where matchid = ?"
+            conn.execute(query, (story, matchid,))
+            cursor.execute("select accounts.name from accounts,gsessions where accounts.name = gsessions.name2")
+            name_to = cursor.fetchall()[0][0]
+            cursor.execute("select number from accounts where name = ?", (name_to,))
+            to_number = cursor.fetchall()[0][0]
+            message = client.messages.create(to=to_number, from_="+15183124106",
+                                     body=msg)
+            conn.commit()
+        elif (turn % 2 == 1) and (name != cursor.fetchall()[0][0]): 
+            query = "select story from gsessions where matchid = ?"
+            cursor.execute(query, (matchid,))
+            story = cursor.fetchall()[0][0]
+            story += msg
+            story += " "
+            query = "update gsessions set story = ?, turn = (turn+1) where matchid = ?"
+            conn.execute(query, (story, matchid,))
+            cursor.execute("select accounts.name from accounts,gsessions where accounts.name = gsessions.name1")
+            name_to = cursor.fetchall()[0][0]
+            cursor.execute("select number from accounts where name = ?", (name_to,))
+            to_number = cursor.fetchall()[0][0]
+            message = client.messages.create(to=to_number, from_="+15183124106",
+                                     body=msg)
+            conn.commit()
+        else:
+            resp.message("It's not yet your turn!")
+            
+        
+         
         
     return str(resp)
 
@@ -104,7 +148,7 @@ def matchmaking(from_number):
                 names = []
                 for row in rows:
                     names.append(row)
-                query = "insert into gsessions (matchid, turn, name1, name2, story) values (?,0,?,?,' ')";
+                query = "insert into gsessions (matchid, turn, name1, name2, story) values (?,0,?,?,'')";
                 conn.execute(query, (matchid,names[0][0],names[1][0],))
                 foundgame = 1
                 break
