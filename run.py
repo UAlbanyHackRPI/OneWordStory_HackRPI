@@ -62,7 +62,31 @@ def start():
             t.start()
         else:
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
-
+    
+    elif msg.startswith('opt out'):
+        query = "select matchid from accounts where number = ?"
+        cursor.execute(query, (from_number,))
+        matchid = cursor.fetchall()[0][0]
+        
+        query = "select name1, name2 from gsessions where matchid = ?"
+        cursor.execute(query, (matchid,))
+        
+        names = cursor.fetchall()[0]
+        
+        cursor.execute("select number from accounts where matchid = ?", (matchid,))
+        
+        nums = []
+        for row in cursor.fetchall():
+            nums.append(row)
+        
+        query = "update accounts set ingame = 0, matchid = 0 where name = ? or name = ?"
+        conn.execute(query, (names[0], names[1],))
+        message = client.messages.create(to=nums[0], from_="+15183124106",
+                                     body="Story has been opted out of and saved to db")
+        message = client.messages.create(to=nums[1], from_="+15183124106",
+                                     body="Story has been opted out of and saved to db")
+        conn.commit()
+    
     else:
         """assumed to be a word entry for the story"""
         
