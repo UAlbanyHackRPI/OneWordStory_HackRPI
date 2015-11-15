@@ -26,7 +26,7 @@ def start():
     msg = request.values.get('Body', None)
     
     
-    if msg.startswith('create account '):
+    if msg.lower().startswith('create account '):
         
         name = msg[15:]
         
@@ -50,11 +50,19 @@ def start():
             rmsg = "".join(["You already have an account, ", cursor.fetchone()[0]])
             resp.message(rmsg)
     
-    elif msg.startswith('delete account'):
+    elif msg.lower().startswith('delete account'):
+        query = "select matchid from accounts where number = ?"
+        cursor.execute(query, (from_number,))
+        matchid = cursor.fetchall()[0][0]
+        
+        if matchid != 0:
+            resp.message("You're currently in a game! Don't ragequit like that!")
+            return str(resp)
+    
         conn.execute("delete from accounts where number = ?", (from_number,))
         resp.message("Account has been deleted.")
     
-    elif msg.startswith('start game'):
+    elif msg.lower().startswith('start game'):
     
         query = "select * from accounts where number = ?"
         cursor.execute(query, (from_number,))
@@ -74,7 +82,7 @@ def start():
         else:
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
     
-    elif msg.startswith('opt out'):
+    elif msg.lower().startswith('opt out'):
         query = "select matchid from accounts where number = ?"
         cursor.execute(query, (from_number,))
         matchid = cursor.fetchall()[0][0]
