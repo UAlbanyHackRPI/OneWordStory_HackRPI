@@ -59,7 +59,14 @@ def start():
         query = "select * from accounts where number = ?"
         cursor.execute(query, (from_number,))
         
-        if len(cursor.fetchall()) != 0:
+        rows = cursor.fetchall()
+        matchid = rows[0][4]
+        
+        if matchid != 0:
+            resp.message("You're already in a game!")
+            return str(resp)
+        
+        if len(rows) != 0:
             message = client.messages.create(to=from_number, from_="+15183124106",
                                      body="Begun matchmaking...")
             t = threading.Thread(target=matchmaking, args=(from_number,))
@@ -68,9 +75,6 @@ def start():
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
     
     elif msg.startswith('opt out'):
-    
-        
-    
         query = "select matchid from accounts where number = ?"
         cursor.execute(query, (from_number,))
         matchid = cursor.fetchall()[0][0]
