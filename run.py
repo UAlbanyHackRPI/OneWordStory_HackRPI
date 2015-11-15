@@ -7,7 +7,9 @@ import random
 
 app = Flask(__name__)
 db_filename = 'acc.db'
-count = 0
+ctfile = open('count.txt', "r+")
+count = int(ctfile.read())
+ctfile.close()
 conn = sqlite3.connect(db_filename, check_same_thread=False)
 cursor = conn.cursor()
 
@@ -61,7 +63,8 @@ def start():
         else:
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
 
-    
+    else:
+        pass
         
     return str(resp)
 
@@ -75,9 +78,17 @@ def matchmaking(from_number):
         num= rows[0][0]
         message = client.messages.create(to=from_number, from_="+15183124106",
                                      body="Match found! Generating game id...")
+        ctfile = open('count.txt', "r+")
+        count = int(ctfile.read())
         query = "update accounts set lfg = 0, ingame = 1, matchid = ? where number = ?"
         conn.execute(query, (count, from_number,))
         conn.execute(query, (count, num,))
+        print count
+        count += 1
+        ctfile.seek(0)
+        ctfile.write(str(count))
+        ctfile.close()
+
     else:
         for x in range(5):
             foundgame = 0
@@ -90,10 +101,11 @@ def matchmaking(from_number):
                 foundgame = 1
                 break
         if not foundgame:
-            query = "update accounts set lfg = 0 where number = ?"
-            conn.execute(query, (from_number,))
             message = client.messages.create(to=from_number, from_="+15183124106",
                                      body="Matchmaking failed! Try again next time.")
+        query = "update accounts set lfg = 0 where number = ?"
+        conn.execute(query, (from_number,))
     conn.commit()
+    
 if __name__ == "__main__":
     app.run(debug=True)
