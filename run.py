@@ -63,8 +63,6 @@ def start():
         else:
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
 
-    else:
-        pass
         
     return str(resp)
 
@@ -93,11 +91,21 @@ def matchmaking(from_number):
         for x in range(5):
             foundgame = 0
             time.sleep(2)
-            query = "select number from accounts where number = ? and ingame = 1"
+            query = "select matchid from accounts where number = ? and ingame = 1"
             cursor.execute(query, (from_number,))
-            if len(cursor.fetchall()) != 0:
+            row = cursor.fetchall()
+            if len(row) != 0:
                 message = client.messages.create(to=from_number, from_="+15183124106",
                                      body="Match found! Generating game id...")
+                matchid = row[0][0]
+                query = "select name from accounts where matchid = ?"
+                cursor.execute(query, (matchid,))
+                rows = cursor.fetchall()
+                names = []
+                for row in rows:
+                    names.append(row)
+                query = "insert into gsessions (matchid, turn, name1, name2, story) values (?,0,?,?,' ')";
+                conn.execute(query, (matchid,names[0][0],names[1][0],))
                 foundgame = 1
                 break
         if not foundgame:
