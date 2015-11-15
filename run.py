@@ -50,6 +50,10 @@ def start():
             rmsg = "".join(["You already have an account, ", cursor.fetchone()[0]])
             resp.message(rmsg)
     
+    elif msg.startswith('delete account'):
+        conn.execute("delete from accounts where number = ?", (from_number,))
+        resp.message("Account has been deleted.")
+    
     elif msg.startswith('start game'):
     
         query = "select * from accounts where number = ?"
@@ -64,9 +68,16 @@ def start():
             resp.message("You don't have an account yet. Please create one by texting us 'create account <username>'; yes, it's that easy!")
     
     elif msg.startswith('opt out'):
+    
+        
+    
         query = "select matchid from accounts where number = ?"
         cursor.execute(query, (from_number,))
         matchid = cursor.fetchall()[0][0]
+        
+        if matchid == 0:
+            resp.message("You're not in a game!")
+            return str(resp)
         
         query = "select name1, name2 from gsessions where matchid = ?"
         cursor.execute(query, (matchid,))
@@ -78,13 +89,13 @@ def start():
         nums = []
         for row in cursor.fetchall():
             nums.append(row)
-        
+        msg = "".join(["Story has been opted out of and saved to db #", str(matchid)])
         query = "update accounts set ingame = 0, matchid = 0 where name = ? or name = ?"
         conn.execute(query, (names[0], names[1],))
         message = client.messages.create(to=nums[0], from_="+15183124106",
-                                     body="Story has been opted out of and saved to db")
+                                     body=msg)
         message = client.messages.create(to=nums[1], from_="+15183124106",
-                                     body="Story has been opted out of and saved to db")
+                                     body=msg)
         conn.commit()
     
     else:
@@ -174,6 +185,12 @@ def matchmaking(from_number):
                     names.append(row)
                 query = "insert into gsessions (matchid, turn, name1, name2, story) values (?,0,?,?,'')";
                 conn.execute(query, (matchid,names[0][0],names[1][0],))
+                firstname = names[0][0]
+                query = "select number from accounts where name = ?"
+                cursor.execute(query, (firstname,))
+                to_number = cursor.fetchall()[0][0]
+                message = client.messages.create(to=to_number, from_="+15183124106",
+                                     body="You go first!")
                 foundgame = 1
                 break
         if not foundgame:
