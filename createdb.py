@@ -29,12 +29,8 @@ conn.execute("""
     """);
 
 conn.execute("""
-    insert into accounts (name, number, ingame, lfg, matchid) values ('tfrometa0221', '+13476146825', 0, 0, 0)
+    insert into accounts (name, number, ingame, lfg, matchid) values ('ADMIN', '573573573', 0, 0, 0)
     """)
-
-conn.execute("""
-    insert into accounts (name, number, ingame, lfg, matchid) values ('KounRyuSui', '+15184951131', 0, 0, 0)
-    """)    
 
 conn.execute("""
     create table gsessions(

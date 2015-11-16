@@ -135,8 +135,9 @@ def start():
             story += " "
             query = "update gsessions set story = ?, turn = (turn+1) where matchid = ?"
             conn.execute(query, (story, matchid,))
-            cursor.execute("select accounts.name from accounts,gsessions where accounts.name = gsessions.name2")
+            cursor.execute("select accounts.name from accounts,gsessions where accounts.name = gsessions.name2 and gsessions.matchid = ?", (matchid,))
             name_to = cursor.fetchall()[0][0]
+            print name_to
             cursor.execute("select number from accounts where name = ?", (name_to,))
             to_number = cursor.fetchall()[0][0]
             message = client.messages.create(to=to_number, from_="+15183124106",
@@ -152,6 +153,7 @@ def start():
             conn.execute(query, (story, matchid,))
             cursor.execute("select accounts.name from accounts,gsessions where accounts.name = gsessions.name1")
             name_to = cursor.fetchall()[0][0]
+            print name_to
             cursor.execute("select number from accounts where name = ?", (name_to,))
             to_number = cursor.fetchall()[0][0]
             message = client.messages.create(to=to_number, from_="+15183124106",
@@ -160,9 +162,6 @@ def start():
         else:
             resp.message("It's not yet your turn!")
             
-        
-         
-        
     return str(resp)
 
 def matchmaking(from_number):
